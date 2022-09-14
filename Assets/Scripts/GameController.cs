@@ -38,6 +38,14 @@ public class GameController : MonoBehaviour
         _defaultEnemyPos = _enemy.position;
     }
 
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            Application.Quit();
+        }
+    }
+
     public void RoundOver(bool playerWon)
     {
         // set the score

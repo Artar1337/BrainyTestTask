@@ -18,7 +18,6 @@ public class Projectile : MonoBehaviour
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        Debug.Log("BULLET HIT " + LayerMask.LayerToName(collision.gameObject.layer));
         // hit the player - destroy
         if (collision.gameObject.layer == LayerMask.NameToLayer("Player"))
         {
@@ -36,7 +35,6 @@ public class Projectile : MonoBehaviour
         // hit the obstacle - ricochet
         else if (collision.gameObject.layer == LayerMask.NameToLayer("Obstacle"))
         {
-            Debug.Log(_direction + " " + collision.GetContact(0).normal);
             _direction = Vector2.Reflect(_direction, collision.GetContact(0).normal);
             _rigidbody.velocity = Vector2.zero;
             _rigidbody.angularVelocity = 0;
