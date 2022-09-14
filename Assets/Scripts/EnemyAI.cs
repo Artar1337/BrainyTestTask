@@ -5,44 +5,59 @@ using Pathfinding;
 
 public class EnemyAI : MonoBehaviour
 {
-    private Path _path;
-    private int _currentWaypoint = 0;
-    private float _nextWaypointDistance;
     private Seeker _seeker;
-
+    private Shooting _shooting;
+    [SerializeField]
+    private LayerMask _recognizableLayers;
+    [SerializeField]
+    private float _cooldown = 0.7f, _rayWidth = 0.1f;
+    private float _currentCooldown;
+    
     private void Start()
     {
         _seeker = GetComponent<Seeker>();
-        _nextWaypointDistance = GetComponent<AIPath>().pickNextWaypointDist;
+        _shooting = GetComponent<Shooting>();
+        GameController.instance.GetComponent<AstarPath>().Scan();
+        _currentCooldown = _cooldown;
         _seeker.StartPath(transform.position, 
-            GetComponent<AIDestinationSetter>().target.transform.position, OnPathComplete);
+            GetComponent<AIDestinationSetter>().target.transform.position);
     }
 
-    private void OnPathComplete(Path p)
+    private void FixedUpdate()
     {
-        if (!p.error)
+        // shooting cooldown
+        if (_currentCooldown > 0f)
         {
-            _path = p;
-            _currentWaypoint = 0;
-        }
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        if (_path == null)
-            return;
-
-        // path ended
-        if (_currentWaypoint >= _path.vectorPath.Count)
-        {
-            Debug.Log("GOT IT!!!");
+            _currentCooldown -= Time.fixedDeltaTime;
             return;
         }
 
-        if (Vector2.Distance(transform.position, _path.vectorPath[_currentWaypoint]) < _nextWaypointDistance)
+        // pointing a ray into a player
+        ShootIfOnTarget(Physics2D.Raycast(_shooting.Gun.position, _shooting.Gun.up, 20f, _recognizableLayers));
+
+        // and 2 more rays to higher chanse of getting a hit
+        if (_currentCooldown > 0f)
+            return;
+        ShootIfOnTarget(Physics2D.Raycast(
+            new Vector2(_shooting.Gun.position.x + _rayWidth, _shooting.Gun.position.y),
+            _shooting.Gun.up, 20f, _recognizableLayers));
+        if (_currentCooldown > 0f)
+            return;
+        ShootIfOnTarget(Physics2D.Raycast(
+            new Vector2(_shooting.Gun.position.x - _rayWidth, _shooting.Gun.position.y),
+            _shooting.Gun.up, 20f, _recognizableLayers));
+    }
+
+    private void ShootIfOnTarget(RaycastHit2D hit)
+    {
+        if (hit.collider != null)
         {
-            _currentWaypoint++;
+            //hits the player - time to shoot
+            if (hit.collider.gameObject.layer == LayerMask.NameToLayer("Player"))
+            {
+                _shooting.Shoot();
+                _currentCooldown = _cooldown;
+            }
         }
     }
 }

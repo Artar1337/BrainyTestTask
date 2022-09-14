@@ -11,6 +11,8 @@ public class Shooting : MonoBehaviour
 
     private Transform _gun, _bullets;
 
+    public Transform Gun { get => _gun; }
+
     // Start is called before the first frame update
     void Start()
     {
@@ -23,8 +25,13 @@ public class Shooting : MonoBehaviour
     {
         if (_isPlayer && Input.GetButtonDown("Fire1"))
         {
-            GameObject projectile = Instantiate(_bullet, _gun.position, _gun.rotation, _bullets);
-            projectile.GetComponent<Projectile>().Direction = _gun.up;
+            Shoot();
         }
+    }
+
+    public void Shoot()
+    {
+        GameObject projectile = Instantiate(_bullet, _gun.position, _gun.rotation, _bullets);
+        projectile.GetComponent<Projectile>().Direction = _gun.up;
     }
 }
