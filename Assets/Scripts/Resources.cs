@@ -1,6 +1,6 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
+
+// resources, can be used for sounds, strings and other objects storage 
 
 public class Resources : MonoBehaviour
 {

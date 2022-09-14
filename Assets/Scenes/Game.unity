@@ -657,7 +657,6 @@ GameObject:
   - component: {fileID: 399028657}
   - component: {fileID: 399028656}
   - component: {fileID: 399028655}
-  - component: {fileID: 399028658}
   m_Layer: 5
   m_Name: StartRandom
   m_TagString: Untagged
@@ -729,8 +728,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 399028658}
-        m_TargetAssemblyTypeName: ButtonsHandler, Assembly-CSharp
+      - m_Target: {fileID: 223800562}
+        m_TargetAssemblyTypeName: GameController, Assembly-CSharp
         m_MethodName: StartGame
         m_Mode: 6
         m_Arguments:
@@ -779,18 +778,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 399028653}
   m_CullTransparentMesh: 1
---- !u!114 &399028658
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 399028653}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8746f605706c65d4b9e3c55bb930f160, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &489881870
 GameObject:
   m_ObjectHideFlags: 0
@@ -2852,7 +2839,6 @@ GameObject:
   - component: {fileID: 1944841947}
   - component: {fileID: 1944841946}
   - component: {fileID: 1944841945}
-  - component: {fileID: 1944841948}
   m_Layer: 5
   m_Name: StartFixed
   m_TagString: Untagged
@@ -2924,8 +2910,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1944841948}
-        m_TargetAssemblyTypeName: ButtonsHandler, Assembly-CSharp
+      - m_Target: {fileID: 223800562}
+        m_TargetAssemblyTypeName: GameController, Assembly-CSharp
         m_MethodName: StartGame
         m_Mode: 6
         m_Arguments:
@@ -2974,18 +2960,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1944841943}
   m_CullTransparentMesh: 1
---- !u!114 &1944841948
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1944841943}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8746f605706c65d4b9e3c55bb930f160, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!4 &1944888541 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 9028696332731973857, guid: 4ead7e76a042a6444a8f374b432a2d40, type: 3}

@@ -1,11 +1,10 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using Pathfinding;
 
+// simple enemy AI, controlls moving (AstarPath package used), shooting
+
 public class EnemyAI : MonoBehaviour
 {
-    private Seeker _seeker;
     private Shooting _shooting;
     [SerializeField]
     private LayerMask _recognizableLayers;
@@ -15,11 +14,10 @@ public class EnemyAI : MonoBehaviour
     
     private void Start()
     {
-        _seeker = GetComponent<Seeker>();
         _shooting = GetComponent<Shooting>();
         GameController.instance.GetComponent<AstarPath>().Scan();
         _currentCooldown = _cooldown;
-        _seeker.StartPath(transform.position, 
+        GetComponent<Seeker>().StartPath(transform.position, 
             GetComponent<AIDestinationSetter>().target.transform.position);
     }
 
@@ -48,6 +46,7 @@ public class EnemyAI : MonoBehaviour
             _shooting.Gun.up, 20f, _recognizableLayers));
     }
 
+    // if ray collides player - shoot
     private void ShootIfOnTarget(RaycastHit2D hit)
     {
         if (hit.collider != null)

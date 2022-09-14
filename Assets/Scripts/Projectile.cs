@@ -1,6 +1,6 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
+
+// bullet scripts, controlls actions oncollisionenter
 
 public class Projectile : MonoBehaviour
 {
@@ -10,6 +10,7 @@ public class Projectile : MonoBehaviour
 
     public Vector2 Direction { set => _direction = value.normalized; }
 
+    // add starting force 
     private void Start()
     {
         _rigidbody = GetComponent<Rigidbody2D>();

@@ -1,7 +1,7 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
+
+// game controller - controlls game events, such as start,
+// end of the game/round
 
 public class GameController : MonoBehaviour
 {

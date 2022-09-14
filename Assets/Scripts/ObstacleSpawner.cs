@@ -1,6 +1,6 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
+
+// spawns obstacles on start
 
 public class ObstacleSpawner : MonoBehaviour
 {
@@ -17,13 +17,18 @@ public class ObstacleSpawner : MonoBehaviour
         float x, y;
         int index;
         Quaternion rotation = new Quaternion();
+        // foreach obstacle
         for(int i = 0; i < _obstacleCount; i++)
         {
+            // choose random coords
             x = Resources.instance.GetRandomFloat(-_XBorder, _XBorder);
             y = Resources.instance.GetRandomFloat(-_YBorder, _YBorder);
+            // random rotation
             rotation.eulerAngles = new Vector3(0, 0, Resources.instance.GetRandomFloat(-90f, 90f));
+            // random obstacle
             index = Resources.instance.Rng.Next(0, _obstacles.Length);
 
+            // if can spawn this (checking by casting the box) - go ahead and spawn
             if (!Physics2D.BoxCast(new Vector2(x, y),
                 _obstacles[index].transform.localScale,
                 rotation.eulerAngles.z, transform.forward))

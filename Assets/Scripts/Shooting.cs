@@ -1,6 +1,6 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
+
+// script controlls spawning bullets for player and for enemy
 
 public class Shooting : MonoBehaviour
 {
