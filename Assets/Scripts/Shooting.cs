@@ -9,12 +9,13 @@ public class Shooting : MonoBehaviour
     [SerializeField]
     private bool _isPlayer = true;
 
-    private Transform _gun;
+    private Transform _gun, _bullets;
 
     // Start is called before the first frame update
     void Start()
     {
         _gun = transform.Find("Gun");
+        _bullets = GameObject.Find("Bullets").transform;
     }
 
     // Update is called once per frame
@@ -22,7 +23,7 @@ public class Shooting : MonoBehaviour
     {
         if (_isPlayer && Input.GetButtonDown("Fire1"))
         {
-            GameObject projectile = Instantiate(_bullet, _gun.position, _gun.rotation);
+            GameObject projectile = Instantiate(_bullet, _gun.position, _gun.rotation, _bullets);
             projectile.GetComponent<Projectile>().Direction = _gun.up;
         }
     }

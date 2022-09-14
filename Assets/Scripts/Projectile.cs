@@ -16,11 +16,6 @@ public class Projectile : MonoBehaviour
         _rigidbody.AddForce(_direction * _bulletSpeed, ForceMode2D.Force);
     }
 
-    private void Update()
-    {
-        //transform.Translate(_direction * Time.deltaTime * _bulletSpeed);
-    }
-
     private void OnCollisionEnter2D(Collision2D collision)
     {
         Debug.Log("BULLET HIT " + LayerMask.LayerToName(collision.gameObject.layer));
@@ -29,14 +24,16 @@ public class Projectile : MonoBehaviour
         {
             // player lose
             Destroy(gameObject);
+            GameController.instance.RoundOver(false);
         }
         // hit the enemy - destroy
         else if (collision.gameObject.layer == LayerMask.NameToLayer("Enemy"))
         {
             // enemy lose
             Destroy(gameObject);
+            GameController.instance.RoundOver(true);
         }
-        // hit the obstacle - ricoshet
+        // hit the obstacle - ricochet
         else if (collision.gameObject.layer == LayerMask.NameToLayer("Obstacle"))
         {
             Debug.Log(_direction + " " + collision.GetContact(0).normal);
