@@ -15,7 +15,7 @@ public class ObstacleSpawner : MonoBehaviour
     void Start()
     {
         float x, y;
-        int index = -1;
+        int index;
         Quaternion rotation = new Quaternion();
         for(int i = 0; i < _obstacleCount; i++)
         {

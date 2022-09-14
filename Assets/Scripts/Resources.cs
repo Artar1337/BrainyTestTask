@@ -33,5 +33,8 @@ public class Resources : MonoBehaviour
     void Start()
     {
         _rng = new System.Random();
+
+        int bulletLayer = LayerMask.NameToLayer("Bullet");
+        Physics2D.IgnoreLayerCollision(bulletLayer, bulletLayer);
     }
 }
