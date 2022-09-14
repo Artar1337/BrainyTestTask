@@ -36,6 +36,8 @@ public class Projectile : MonoBehaviour
         else if (collision.gameObject.layer == LayerMask.NameToLayer("Obstacle"))
         {
             _direction = Vector2.Reflect(_direction, collision.GetContact(0).normal);
+            if (_rigidbody == null)
+                return;
             _rigidbody.velocity = Vector2.zero;
             _rigidbody.angularVelocity = 0;
             _rigidbody.AddForce(_direction * _bulletSpeed, ForceMode2D.Force);

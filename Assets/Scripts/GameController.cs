@@ -22,20 +22,45 @@ public class GameController : MonoBehaviour
     // key - player's score, value - computer's score
     private int _playerScore = 0, _computerScore = 0;
     private Transform _bullets, _player, _enemy;
+    private GameObject _centerBox, _constField;
     private Vector3 _defaultPlayerPos, _defaultEnemyPos;
-    private Text _score;
+    private TMPro.TMP_Text _score;
 
-    public string Score { get => _playerScore + " : " + _computerScore; }
+    public string Score { get => "<color=green>" + _playerScore + "</color><b>:</b><color=red>" + _computerScore + "</color>"; }
 
     // Start is called before the first frame update
     void Start()
     {
         _bullets = GameObject.Find("Bullets").transform;
         _player = GameObject.Find("Player").transform;
+        _player.gameObject.SetActive(false);
         _enemy = GameObject.Find("Enemy").transform;
-        _score = GameObject.Find("Main Canvas").transform.Find("Score").GetComponent<Text>();
+        _enemy.gameObject.SetActive(false);
+        _centerBox = GameObject.Find("CenterBox");
+        _centerBox.gameObject.SetActive(false);
+        _constField = GameObject.Find("Constant Battlefield");
+        _constField.gameObject.SetActive(false);
+        _score = GameObject.Find("Main Canvas").transform.Find("Score").GetComponent<TMPro.TMP_Text>();
         _defaultPlayerPos = _player.position;
         _defaultEnemyPos = _enemy.position;
+    }
+
+    public void StartGame(bool withRandomField)
+    {
+        _centerBox.SetActive(true);
+        if (withRandomField)
+        {
+            GetComponent<ObstacleSpawner>().enabled = true;
+        }
+        else
+        {
+            _constField.SetActive(true);
+        }
+        _player.gameObject.SetActive(true);
+        _enemy.gameObject.SetActive(true);
+        Transform tmp = GameObject.Find("Main Canvas").transform;
+        tmp.Find("StartRandom").gameObject.SetActive(false);
+        tmp.Find("StartFixed").gameObject.SetActive(false);
     }
 
     private void Update()
