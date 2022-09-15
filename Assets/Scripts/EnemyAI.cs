@@ -102,7 +102,7 @@ public class EnemyAI : MonoBehaviour
     private IEnumerator EvadeBulletCoroutine(bool evadingOnX)
     {
         _aiPath.enabled = false;
-        float time = 0, step = 1f;
+        float step = 1f;
         Vector2 start = transform.position, 
             endRight = new Vector2(start.x + step, start.y), 
             endLeft = new Vector2(start.x - step, start.y), end;
@@ -133,8 +133,7 @@ public class EnemyAI : MonoBehaviour
 
         while (Mathf.Abs(transform.position.x - end.x) + Mathf.Abs(transform.position.y - end.y) > 0.05f)
         {
-            transform.position = Vector2.MoveTowards(transform.position, end, 0.01f);
-            time += Time.deltaTime;
+            transform.position = Vector2.MoveTowards(transform.position, end, Time.deltaTime * 4f);
             yield return null;
         }
 
