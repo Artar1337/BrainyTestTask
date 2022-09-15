@@ -7,8 +7,10 @@ public class Projectile : MonoBehaviour
     public float _bulletSpeed = 5f;
     private Vector2 _direction;
     private Rigidbody2D _rigidbody;
+    private bool _isPlayerOwner = false;
 
     public Vector2 Direction { set => _direction = value.normalized; }
+    public bool IsPlayerOwner { set => _isPlayerOwner = value; }
 
     // add starting force 
     private void Start()
@@ -42,6 +44,8 @@ public class Projectile : MonoBehaviour
             _rigidbody.velocity = Vector2.zero;
             _rigidbody.angularVelocity = 0;
             _rigidbody.AddForce(_direction * _bulletSpeed, ForceMode2D.Force);
+            if(_isPlayerOwner)
+                CombinationReader.instance.CheckIfActionWasCommited(EActions.ProjectileBounce);
         }
         else if(collision.gameObject.layer == LayerMask.NameToLayer("BulletDestroyer"))
         {

@@ -25,13 +25,15 @@ public class Shooting : MonoBehaviour
     {
         if (_isPlayer && Input.GetButtonDown("Fire1"))
         {
-            Shoot();
+            CombinationReader.instance.CheckIfActionWasCommited(EActions.Shot);
+            Shoot(true);
         }
     }
 
-    public void Shoot()
+    public void Shoot(bool isPlayerOwner = false)
     {
-        GameObject projectile = Instantiate(_bullet, _gun.position, _gun.rotation, _bullets);
-        projectile.GetComponent<Projectile>().Direction = _gun.up;
+        Projectile projectile = Instantiate(_bullet, _gun.position, _gun.rotation, _bullets).GetComponent<Projectile>();
+        projectile.Direction = _gun.up;
+        projectile.IsPlayerOwner = isPlayerOwner;
     }
 }
