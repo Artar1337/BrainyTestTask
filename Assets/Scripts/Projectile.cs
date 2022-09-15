@@ -9,7 +9,7 @@ public class Projectile : MonoBehaviour
     private Rigidbody2D _rigidbody;
     private bool _isPlayerOwner = false;
 
-    public Vector2 Direction { set => _direction = value.normalized; }
+    public Vector2 Direction { set => _direction = value.normalized; get => _direction; }
     public bool IsPlayerOwner { set => _isPlayerOwner = value; }
 
     // add starting force 

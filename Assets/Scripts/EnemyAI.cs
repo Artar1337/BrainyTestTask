@@ -8,13 +8,15 @@ using Pathfinding;
 public class EnemyAI : MonoBehaviour
 {
     [SerializeField]
+    private LayerMask _bulletCheckerMask;
+    [SerializeField]
     private int _ricochetRayCheckerCount = 90;
     [SerializeField]
     private LayerMask _recognizableLayers;
     [SerializeField]
     private float _cooldown = 0.7f, _rayWidth = 0.1f;
     private Shooting _shooting;
-    private float _currentCooldown;
+    private float _currentCooldown, _dodgeCooldown = 0f;
     private AIPath _aiPath;
     
     private void Start()
@@ -29,18 +31,51 @@ public class EnemyAI : MonoBehaviour
 
     private void FixedUpdate()
     {
+        if (_dodgeCooldown <= 0f)
+        {
+            // bullet dodge check
+            BulletEvadingCheck();
+        }
+        else
+        {
+            _dodgeCooldown -= Time.fixedDeltaTime;
+        }
+        
         // shooting cooldown
         if (_currentCooldown > 0f)
         {
             _currentCooldown -= Time.fixedDeltaTime;
             return;
         }
+        
+        // check if can shoot directly and shoot if can
+        CheckDirectShot();
+
         // check random tick - if 2% chance dropped - then make ricochet check
         if (Resources.instance.Rng.Next(0, 100) > 97)
             CheckRicochetShot();
+    }
 
-        // check if can shoot directly and shoot if can
-        CheckDirectShot();
+    private void BulletEvadingCheck()
+    {
+        RaycastHit2D hit;
+        Projectile bullet;
+        for (int i = 0; i < _shooting.Bullets.childCount; i++)
+        {
+            bullet = _shooting.Bullets.GetChild(i).GetComponent<Projectile>();
+            // check if bullet hits the enemy
+            hit = Physics2D.Raycast(bullet.transform.position, bullet.Direction, 1000000f, _bulletCheckerMask);
+            // if bullet hits enemy - time to dodge!
+            if (hit.collider != null)
+            {
+                if(hit.collider.gameObject.layer == LayerMask.NameToLayer("Enemy"))
+                {
+                    _dodgeCooldown = 1.8f;
+                    StartCoroutine(EvadeBulletCoroutine(Mathf.Abs(bullet.Direction.x) > Mathf.Abs(bullet.Direction.y)));
+                    return;
+                }
+            }
+        }
     }
 
     private void CheckRicochetShot()
@@ -64,6 +99,49 @@ public class EnemyAI : MonoBehaviour
         transform.eulerAngles = initialRotation;
     }
 
+    private IEnumerator EvadeBulletCoroutine(bool evadingOnX)
+    {
+        _aiPath.enabled = false;
+        float time = 0, step = 1f;
+        Vector2 start = transform.position, 
+            endRight = new Vector2(start.x + step, start.y), 
+            endLeft = new Vector2(start.x - step, start.y), end;
+        if (evadingOnX)
+        {
+            endRight = new Vector2(start.x, start.y + step);
+            endLeft = new Vector2(start.x, start.y - step);
+        }
+        bool canSpawnOnRight = !Physics2D.CircleCast(endRight, 1f, transform.forward, 1f, LayerMask.NameToLayer("Obstacle"));
+        bool canSpawnOnLeft = !Physics2D.CircleCast(endLeft, 1f, transform.forward, 1f, LayerMask.NameToLayer("Obstacle"));
+
+        if(canSpawnOnLeft && canSpawnOnRight)
+        {
+            end = Resources.instance.Rng.Next(0, 2) > 0 ? endRight : endLeft;
+        }
+        else if (canSpawnOnLeft)
+        {
+            end = endLeft;
+        }
+        else if (canSpawnOnRight)
+        {
+            end = endRight;
+        }
+        else
+        {
+            yield break;
+        }
+
+        while (Mathf.Abs(transform.position.x - end.x) + Mathf.Abs(transform.position.y - end.y) > 0.05f)
+        {
+            transform.position = Vector2.MoveTowards(transform.position, end, 0.01f);
+            time += Time.deltaTime;
+            yield return null;
+        }
+
+        yield return null;
+        _aiPath.enabled = true;
+    }
+
     private IEnumerator RotateAndShootCoroutine(Vector3 shootDirection, Vector3 initialRotation)
     {
         _aiPath.enabled = false;
@@ -75,7 +153,7 @@ public class EnemyAI : MonoBehaviour
 
         while (Mathf.Abs(transform.eulerAngles.z - shootDirection.z) > 0.1f)
         {
-            transform.rotation = Quaternion.Lerp(start, end, time * 2f);
+            transform.rotation = Quaternion.Lerp(start, end, time * 4f);
             time += Time.deltaTime;
             yield return null;
         }

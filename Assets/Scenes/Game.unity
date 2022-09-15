@@ -1011,7 +1011,6 @@ GameObject:
   - component: {fileID: 535067837}
   - component: {fileID: 535067838}
   - component: {fileID: 535067839}
-  - component: {fileID: 535067840}
   m_Layer: 7
   m_Name: Enemy
   m_TagString: Untagged
@@ -1199,6 +1198,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 337c1597380ce514ca0148c50b719268, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _bulletCheckerMask:
+    serializedVersion: 2
+    m_Bits: 384
   _ricochetRayCheckerCount: 90
   _recognizableLayers:
     serializedVersion: 2
@@ -1219,48 +1221,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _bullet: {fileID: 3882764004102328644, guid: 8bf03e02247174e4f99ce62c26f852dc, type: 3}
   _isPlayer: 0
---- !u!114 &535067840
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 535067831}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f6eb1402c17e84a9282a7f0f62eb584f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  version: 5
-  radius: 0.5
-  height: 2
-  canMove: 1
-  maxSpeed: 1
-  gravity: {x: NaN, y: NaN, z: NaN}
-  groundMask:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  centerOffsetCompatibility: NaN
-  repathRateCompatibility: NaN
-  canSearchCompability: 0
-  orientation: 0
-  enableRotation: 1
-  autoRepath:
-    mode: 2
-    interval: 0.5
-    sensitivity: 10
-    maximumInterval: 2
-    visualizeSensitivity: 0
-  targetCompatibility: {fileID: 0}
-  maxAcceleration: -2.5
-  rotationSpeed: 360
-  slowdownDistance: 0.6
-  pickNextWaypointDist: 2
-  endReachedDistance: 0.2
-  alwaysDrawGizmos: 0
-  slowWhenNotFacingTarget: 1
-  whenCloseToDestination: 0
-  constrainInsideGraph: 0
 --- !u!1001 &542552750
 PrefabInstance:
   m_ObjectHideFlags: 0

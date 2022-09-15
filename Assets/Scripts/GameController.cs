@@ -85,6 +85,8 @@ public class GameController : MonoBehaviour
             Destroy(child.gameObject);
         }
         //return to base positions
+        _enemy.GetComponent<EnemyAI>().StopAllCoroutines();
+        _enemy.GetComponent<Pathfinding.AIPath>().enabled = true;
         _player.position = _defaultPlayerPos;
         _enemy.position = _defaultEnemyPos;
         Rigidbody2D rigidbody = _player.GetComponent<Rigidbody2D>();

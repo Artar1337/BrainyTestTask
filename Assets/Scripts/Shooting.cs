@@ -12,6 +12,7 @@ public class Shooting : MonoBehaviour
     private Transform _gun, _bullets;
 
     public Transform Gun { get => _gun; }
+    public Transform Bullets { get => _bullets; }
 
     // Start is called before the first frame update
     void Start()
