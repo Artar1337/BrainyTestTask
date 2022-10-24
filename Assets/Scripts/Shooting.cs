@@ -1,40 +1,44 @@
-using UnityEngine;
+﻿using UnityEngine;
 
-// script controlls spawning bullets for player and for enemy
-
+/// <summary>
+/// Контролирует спавн пуль
+/// </summary>
 public class Shooting : MonoBehaviour
 {
+    private const string SHOOTAXIS = "Fire1";
+
     [SerializeField]
-    private GameObject _bullet;
+    private GameObject bullet;
     [SerializeField]
-    private bool _isPlayer = true;
+    private bool isPlayer = true;
+    [SerializeField]
+    private Transform gun;
+    [SerializeField]
+    private Transform bullets;
 
-    private Transform _gun, _bullets;
+    public Transform Gun { get => gun; }
+    public Transform Bullets { get => bullets; }
 
-    public Transform Gun { get => _gun; }
-    public Transform Bullets { get => _bullets; }
-
-    // Start is called before the first frame update
-    void Start()
-    {
-        _gun = transform.Find("Gun");
-        _bullets = GameObject.Find("Bullets").transform;
-    }
-
-    // Update is called once per frame
+    /// <summary>
+    /// Проверка input для спавна пуль игроком
+    /// </summary>
     void Update()
     {
-        if (_isPlayer && Input.GetButtonDown("Fire1"))
+        if (isPlayer && Input.GetButtonDown(SHOOTAXIS))
         {
             CombinationReader.instance.CheckIfActionWasCommited(EActions.Shot);
             Shoot(true);
         }
     }
 
+    /// <summary>
+    /// Спавнит пулю
+    /// </summary>
+    /// <param name="isPlayerOwner">Игрок - владелец пули?</param>
     public void Shoot(bool isPlayerOwner = false)
     {
-        Projectile projectile = Instantiate(_bullet, _gun.position, _gun.rotation, _bullets).GetComponent<Projectile>();
-        projectile.Direction = _gun.up;
+        Projectile projectile = Instantiate(bullet, gun.position, gun.rotation, bullets).GetComponent<Projectile>();
+        projectile.Direction = gun.up;
         projectile.IsPlayerOwner = isPlayerOwner;
     }
 }

@@ -1,59 +1,77 @@
-using UnityEngine;
+﻿using UnityEngine;
 
-// player movement script
-
+/// <summary>
+/// Контроль движения игрока
+/// </summary>
 [RequireComponent(typeof(Rigidbody2D))]
 public class Movement : MonoBehaviour
 {
-    [SerializeField]
-    private float _speed = 1f;
-    [SerializeField]
-    [Range(0,359.99f)]
-    private float _minimalDetectionSpeed = 0.01f, _minimalRotationDetectionAngle = 5f;
+    private const string VERTICALAXIS = "Vertical";
+    private const string HORIZONTALAXIS = "Horizontal";
+    private const float DEG90 = 90f;
 
-    private Rigidbody2D _rigidbody;
-    private Camera _mainCam;
-    private Vector2 _movement, _mousePosition;
-    private float _lastRotation;
+    [SerializeField]
+    private float speed = 5f;
+    [SerializeField]
+    private float minimalDetectionSpeed = 0.01f;
+    [SerializeField]
+    [Range(0, 359.99f)]
+    private float minimalRotationDetectionAngle = 5f;
+    [SerializeField]
+    private Camera mainCam;
 
-    // Start is called before the first frame update
+    private new Rigidbody2D rigidbody;
+    private Vector2 movement;
+    private Vector2 mousePosition;
+    private float lastRotation;
+
     void Start()
     {
-        _mainCam = GameObject.Find("Main Camera").GetComponent<Camera>();
-        _rigidbody = GetComponent<Rigidbody2D>();
-        _lastRotation = _rigidbody.rotation;
+        rigidbody = GetComponent<Rigidbody2D>();
+        lastRotation = rigidbody.rotation;
     }
 
+    /// <summary>
+    /// Проверка на то, было ли совершено действие "Движение"
+    /// </summary>
+    /// <returns>True, если действие было совершено</returns>
     public bool CheckYVelocity()
     {
-        return Mathf.Abs(_movement.y) > _minimalDetectionSpeed;
+        return Mathf.Abs(movement.y) > minimalDetectionSpeed;
     }
 
+    /// <summary>
+    /// Проверка на то, было ли совершено действие "Движение в сторону"
+    /// </summary>
+    /// <returns>True, если действие было совершено</returns>
     public bool CheckXVelocity()
     {
-        return Mathf.Abs(_movement.x) > _minimalDetectionSpeed;
+        return Mathf.Abs(movement.x) > minimalDetectionSpeed;
     }
 
+    /// <summary>
+    /// Проверка на то, было ли совершено действие "Поворот"
+    /// </summary>
+    /// <returns>True, если действие было совершено</returns>
     public bool CheckRotation()
     {
-        return Mathf.Abs(_rigidbody.rotation - _lastRotation) > _minimalRotationDetectionAngle;
+        return Mathf.Abs(rigidbody.rotation - lastRotation) > minimalRotationDetectionAngle;
     }
 
+    /// <summary>
+    /// Обработка движения в зависимости от нажатых клавиш
+    /// </summary>
     private void FixedUpdate()
     {
-        // get buttons
-        _movement.x = Input.GetAxis("Horizontal");
-        _movement.y = Input.GetAxis("Vertical");
-        // get rotation
-        _mousePosition = _mainCam.ScreenToWorldPoint(Input.mousePosition);
+        movement.x = Input.GetAxis(HORIZONTALAXIS);
+        movement.y = Input.GetAxis(VERTICALAXIS);
+        mousePosition = mainCam.ScreenToWorldPoint(Input.mousePosition);
 
-        // move player
-        _rigidbody.MovePosition(_rigidbody.position + _movement * _speed * Time.fixedDeltaTime);
+        rigidbody.MovePosition(rigidbody.position + movement * speed * Time.fixedDeltaTime);
 
-        //rotate player
-        Vector2 lookDirection = _mousePosition - _rigidbody.position;
-        _lastRotation = _rigidbody.rotation;
-        _rigidbody.rotation = Mathf.Atan2(lookDirection.y, lookDirection.x) * Mathf.Rad2Deg - 90f;
+        Vector2 lookDirection = mousePosition - rigidbody.position;
+        lastRotation = rigidbody.rotation;
+        rigidbody.rotation = Mathf.Atan2(lookDirection.y, lookDirection.x) * Mathf.Rad2Deg - DEG90;
 
         CombinationReader.instance.CheckIfActionWasCommited(EActions.Walk);
         CombinationReader.instance.CheckIfActionWasCommited(EActions.SideWalk);

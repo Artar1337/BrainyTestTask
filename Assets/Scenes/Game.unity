@@ -376,7 +376,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 223800559}
-  - component: {fileID: 223800561}
   - component: {fileID: 223800560}
   - component: {fileID: 223800562}
   - component: {fileID: 223800563}
@@ -420,18 +419,6 @@ MonoBehaviour:
   - {fileID: 657918732742710480, guid: 7f99335c45c23684d992c636b4125881, type: 3}
   _XBorder: 8.888
   _YBorder: 5
---- !u!114 &223800561
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 223800558}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 38c21a3a80a6ad549980e4b5fe8ebaa8, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &223800562
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -444,6 +431,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 62760279b3f56fb4ebd46abcd5b3773c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  bullets: {fileID: 1403181278}
+  player: {fileID: 1414296468}
+  enemy: {fileID: 535067834}
+  centerBox: {fileID: 1544589509}
+  constField: {fileID: 67681125}
+  score: {fileID: 1943409430}
+  startFixed: {fileID: 1944841943}
+  startRandom: {fileID: 399028653}
 --- !u!114 &223800563
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1198,15 +1193,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 337c1597380ce514ca0148c50b719268, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _bulletCheckerMask:
+  bulletCheckerMask:
     serializedVersion: 2
-    m_Bits: 384
-  _ricochetRayCheckerCount: 90
-  _recognizableLayers:
+    m_Bits: 128
+  ricochetRayCheckerCount: 90
+  recognizableLayers:
     serializedVersion: 2
-    m_Bits: 320
-  _cooldown: 0.08
-  _rayWidth: 0.3
+    m_Bits: 960
+  cooldown: 0.1
 --- !u!114 &535067839
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1219,8 +1213,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8a3829eda376a464586b6688136a77f6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _bullet: {fileID: 3882764004102328644, guid: 8bf03e02247174e4f99ce62c26f852dc, type: 3}
-  _isPlayer: 0
+  bullet: {fileID: 3882764004102328644, guid: 8bf03e02247174e4f99ce62c26f852dc, type: 3}
+  isPlayer: 0
+  gun: {fileID: 1948457304}
+  bullets: {fileID: 1403181278}
 --- !u!1001 &542552750
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2242,9 +2238,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2d37337bc7769194a93bf5ae72c18226, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _speed: 5
-  _minimalDetectionSpeed: 0.01
-  _minimalRotationDetectionAngle: 8
+  speed: 5
+  minimalDetectionSpeed: 0.01
+  minimalRotationDetectionAngle: 5
+  mainCam: {fileID: 519420031}
 --- !u!50 &1414296470
 Rigidbody2D:
   serializedVersion: 4
@@ -2278,8 +2275,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8a3829eda376a464586b6688136a77f6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _bullet: {fileID: 3882764004102328644, guid: 8bf03e02247174e4f99ce62c26f852dc, type: 3}
-  _isPlayer: 1
+  bullet: {fileID: 3882764004102328644, guid: 8bf03e02247174e4f99ce62c26f852dc, type: 3}
+  isPlayer: 1
+  gun: {fileID: 798349210}
+  bullets: {fileID: 1403181278}
 --- !u!114 &1414296472
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2292,8 +2291,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 44e2dfb1c40a388489670bfed29fe0fa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _walkCooldown: 3
-  _rotationCooldown: 1.8
+  walkCooldown: 3
+  rotationCooldown: 1.8
+  log: {fileID: 571207962}
 --- !u!4 &1477076784 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 27369576824026676, guid: 5fd58e470000f3e44bb41ba0307424be, type: 3}
@@ -2518,6 +2518,11 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!1 &1544589509 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 6012595228373190869, guid: 4ead7e76a042a6444a8f374b432a2d40, type: 3}
+  m_PrefabInstance: {fileID: 595255958}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1621013653
 GameObject:
   m_ObjectHideFlags: 0

@@ -1,7 +1,8 @@
-using UnityEngine;
+﻿using UnityEngine;
 
-// spawns obstacles on start
-
+/// <summary>
+/// Спавнит препятствия при старте игры случайным образом
+/// </summary>
 public class ObstacleSpawner : MonoBehaviour
 {
     [SerializeField]
@@ -11,24 +12,21 @@ public class ObstacleSpawner : MonoBehaviour
     [SerializeField]
     private float _XBorder = 8.888f, _YBorder = 5f;
 
-    // Start is called before the first frame update
+    /// <summary>
+    /// Спавнит препятствия
+    /// </summary>
     void Start()
     {
         float x, y;
         int index;
         Quaternion rotation = new Quaternion();
-        // foreach obstacle
         for(int i = 0; i < _obstacleCount; i++)
         {
-            // choose random coords
-            x = Resources.instance.GetRandomFloat(-_XBorder, _XBorder);
-            y = Resources.instance.GetRandomFloat(-_YBorder, _YBorder);
-            // random rotation
-            rotation.eulerAngles = new Vector3(0, 0, Resources.instance.GetRandomFloat(-90f, 90f));
-            // random obstacle
-            index = Resources.instance.Rng.Next(0, _obstacles.Length);
+            x = Random.Range(-_XBorder, _XBorder);
+            y = Random.Range(-_YBorder, _YBorder);
+            rotation.eulerAngles = new Vector3(0, 0, Random.Range(-90f, 90f));
+            index = Random.Range(0, _obstacles.Length);
 
-            // if can spawn this (checking by casting the box) - go ahead and spawn
             if (!Physics2D.BoxCast(new Vector2(x, y),
                 _obstacles[index].transform.localScale,
                 rotation.eulerAngles.z, transform.forward))
@@ -37,8 +35,9 @@ public class ObstacleSpawner : MonoBehaviour
                     new Vector3(x, y), rotation);
             }
             else
+            {
                 i--;
+            }    
         }
     }
-
 }

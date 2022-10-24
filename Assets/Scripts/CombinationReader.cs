@@ -1,10 +1,11 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
+using TMPro;
 
-// parsing and outputting all combo-actions
-
-// possible actions
+/// <summary>
+/// Возможные действия в комбо
+/// </summary>
 public enum EActions
 {
     None,
@@ -15,10 +16,12 @@ public enum EActions
     Rotation
 }
 
+/// <summary>
+/// Парсинг и вывод всех комбо
+/// </summary>
 [RequireComponent(typeof(Movement))]
 public class CombinationReader : MonoBehaviour
 {
-
     #region Singleton
     public static CombinationReader instance;
 
@@ -33,8 +36,21 @@ public class CombinationReader : MonoBehaviour
     }
     #endregion
 
-    // some actions to read (MUST be at least two actions!)
-    private List<List<EActions>> _combinations = new List<List<EActions>>() { 
+    private const string SEPARATOR = ", ";
+    private const string NEWLINESEPARATOR = "\n ";
+    private const float LOGREMOVETIME = 3f;
+
+    [SerializeField]
+    private float walkCooldown = 3f;
+    [SerializeField]
+    private float rotationCooldown = 1.8f;
+    [SerializeField]
+    private TMP_Text log;
+
+    /// <summary>
+    /// Комбинации действий, распознаваемые игрой (ДОЛЖНО быть хотя бы 2 действия)
+    /// </summary>
+    private List<List<EActions>> combinations = new List<List<EActions>>() { 
         new List<EActions>(){ EActions.Walk, EActions.Shot, EActions.ProjectileBounce },
         new List<EActions>(){ EActions.Rotation, EActions.Shot },
         new List<EActions>(){ EActions.Walk, EActions.Rotation, EActions.Shot },
@@ -42,172 +58,185 @@ public class CombinationReader : MonoBehaviour
         new List<EActions>(){ EActions.Shot, EActions.Shot },
         new List<EActions>(){ EActions.SideWalk, EActions.Shot }
     };
-    // key - list index, value - actionindex
-    private Dictionary<int, int> _valid = new Dictionary<int, int>();
-    // visual representation
-    private TMPro.TMP_Text _log;
-    private Movement _movement;
-    [SerializeField]
-    private float _walkCooldown = 3f, _rotationCooldown = 1.8f;
-    private float _currentWalkCooldown = -1f, _currentSideCooldown = -1f, _currentRotationCooldown = -1f;
+    /// <summary>
+    /// Key - индекс комбинации, Value - индекс действия в комбинации
+    /// </summary>
+    private Dictionary<int, int> valid = new Dictionary<int, int>();
+    private Movement movement;
+    private float currentWalkCooldown = 0;
+    private float currentSideCooldown = 0; 
+    private float currentRotationCooldown = 0;
 
-    // Start is called before the first frame update
     void Start()
     {
-        _log = GameObject.Find("Main Canvas").transform.Find("Log").GetComponent<TMPro.TMP_Text>();
-        _movement = GetComponent<Movement>();
+        movement = GetComponent<Movement>();
     }
 
+    /// <summary>
+    /// Апдейт таймера для кулдаунов
+    /// </summary>
     private void FixedUpdate()
     {
-        if (_currentWalkCooldown > 0f)
-            _currentWalkCooldown -= Time.fixedDeltaTime;
-        if (_currentSideCooldown > 0f)
-            _currentSideCooldown -= Time.fixedDeltaTime;
-        if (_currentRotationCooldown > 0f)
-            _currentRotationCooldown -= Time.fixedDeltaTime;
+        if (currentWalkCooldown > 0f)
+        {
+            currentWalkCooldown -= Time.fixedDeltaTime;
+        } 
+        if (currentSideCooldown > 0f)
+        {
+            currentSideCooldown -= Time.fixedDeltaTime;
+        }
+        if (currentRotationCooldown > 0f)
+        {
+            currentRotationCooldown -= Time.fixedDeltaTime;
+        }
     }
 
+    /// <summary>
+    /// Совершает действие (проверка соответствия всем комбо)
+    /// </summary>
+    /// <param name="action">Действие для совершения</param>
     private void CommitAction(EActions action)
     {
-        Debug.Log("Action: " + action.ToString());
-        // got some valid actions - checking them first
-        if(_valid.Count > 0)
+        if(valid.Count > 0)
         {
             var newValid = new Dictionary<int,int>();
-            foreach(var pair in _valid)
+            foreach(var pair in valid)
             {
-                // if action is next action in _combinations - reassign value
-                if(_combinations[pair.Key][pair.Value + 1] == action)
+                // если action - следующее действие в комбинациях - переназначаем value
+                if(combinations[pair.Key][pair.Value + 1] == action)
                 {
                     newValid.Add(pair.Key, pair.Value + 1);
                 }
-                // else - combo does not match, ignore
             }
 
-            _valid.Clear();
+            valid.Clear();
             foreach (var pair in newValid)
             {
-                _valid.Add(pair.Key, pair.Value);
+                valid.Add(pair.Key, pair.Value);
             }
 
             List<int> clearList = new List<int>();
-            foreach (var pair in _valid)
+            foreach (var pair in valid)
             {
-                // got to a last index - combo detected!
-                if (_valid[pair.Key] == _combinations[pair.Key].Count - 1)
+                // индекс максимально возможный => это комбо
+                if (valid[pair.Key] == combinations[pair.Key].Count - 1)
                 {
-                    // outputting a string
-                    OutputCombo(_combinations[pair.Key]);
-                    // clearing a dictionary
+                    OutputCombo(combinations[pair.Key]);
                     clearList.Add(pair.Key);
                 }
             }
 
             foreach(var element in clearList)
             {
-                _valid.Remove(element);
+                valid.Remove(element);
             }
         }
 
-        // searching in every combination and initialize _valid
+        // реинициализация словаря valid
         int index = 0;
-        foreach (var list in _combinations)
+        foreach (var list in combinations)
         {
-            // found first element, init _valid
-            if(list[0] == action && !_valid.ContainsKey(index))
+            if(list[0] == action && !valid.ContainsKey(index))
             {
-                _valid.Add(index, 0);
+                valid.Add(index, 0);
             }
             index++;
         }
     }
 
-    // translate list of actions to string
+    /// <summary>
+    /// Перевод комбо в строку
+    /// </summary>
+    /// <param name="combos">Комбо для конвертации в строку</param>
+    /// <returns>List<EActions> в формате string</returns>
     private string GetCombo(List<EActions> combos)
     {
         StringBuilder builder = new StringBuilder();
         foreach(var combo in combos)
         {
             builder.Append(combo.ToString());
-            builder.Append(", ");
+            builder.Append(SEPARATOR);
         }
-        builder.Remove(builder.Length - 2, 2);
+        builder.Remove(builder.Length - SEPARATOR.Length, SEPARATOR.Length);
         return builder.ToString();
     }
 
+    /// <summary>
+    /// Вывод комбо в лог
+    /// </summary>
+    /// <param name="combos">Комбо для вывода</param>
     private void OutputCombo(List<EActions> combos)
     {
-        _log.text = _log.text + GetCombo(combos) + "\n ";
-        Invoke(nameof(RemoveOneLineFromLog), 3f);
+        log.text = log.text + GetCombo(combos) + NEWLINESEPARATOR;
+        Invoke(nameof(RemoveOneLineFromLog), LOGREMOVETIME);
     }
 
+    /// <summary>
+    /// Убирает первую строку из лога (удаляет часть строки до NEWLINEEPARATOR)
+    /// </summary>
     public void RemoveOneLineFromLog()
     {
         int index = 0;
-        bool found = false;
-        // searching for first '\n'
-        foreach(char c in _log.text)
+        foreach(char c in log.text)
         {
-            if (c == '\n')
+            if (c == NEWLINESEPARATOR[0])
             {
-                found = true;
-                break;
+                log.text = log.text.Substring(index + 1);
+                return;
             }
             index++;
         }
-        // reassigning the text to substring after first '\n'
-        if (found)
-        {
-            _log.text = _log.text.Substring(index + 1);
-        }
     }
 
+    /// <summary>
+    /// Проверка, что действие было совершено
+    /// </summary>
+    /// <param name="action">Действие для проверки</param>
     public void CheckIfActionWasCommited(EActions action)
     {
         switch (action)
         {
             case EActions.Walk:  
-                // check if player's velocity is high enough (W, S, Yaxis)
-                if (!_movement.CheckYVelocity())
+                // Проверка velocity (W, S, Yaxis)
+                if (!movement.CheckYVelocity())
                 {
-                    _currentWalkCooldown = -0.1f;
+                    currentWalkCooldown = 0f;
                     return;
                 }  
-                if (_currentWalkCooldown > 0f)
+                if (currentWalkCooldown > 0f)
+                {
                     return;
-                _currentWalkCooldown = _walkCooldown;
+                }
+                currentWalkCooldown = walkCooldown;
                 break;
             case EActions.SideWalk:
-                // check if player's velocity is high enough (A, D, Xaxis)
-                if (!_movement.CheckXVelocity())
+                // Проверка velocity (A, D, Xaxis)
+                if (!movement.CheckXVelocity())
                 {
-                    _currentSideCooldown = -0.1f;
+                    currentSideCooldown = 0f;
                     return;
                 }
-                if (_currentSideCooldown > 0f)
+                if (currentSideCooldown > 0f)
+                {
                     return;
-                _currentSideCooldown = _walkCooldown;
+                } 
+                currentSideCooldown = walkCooldown;
                 break;
             case EActions.Rotation:
-                // check player's angle rotation change - if high enough, then commit
-                if (!_movement.CheckRotation())
+                // Проверка delta угла поворота
+                if (!movement.CheckRotation())
                 {
-                    _currentRotationCooldown = -0.1f;
+                    currentRotationCooldown = 0f;
                     return;
                 }
-                if (_currentRotationCooldown > 0f)
+                if (currentRotationCooldown > 0f)
+                {
                     return;
-                _currentRotationCooldown = _rotationCooldown;
-                break;
-            case EActions.Shot:
-                // does not need to be checked - just summon when shoot button is pressed
-                break;
-            case EActions.ProjectileBounce:
-                // does not need to be checked - just summon when player's projectile is bouncing
+                } 
+                currentRotationCooldown = rotationCooldown;
                 break;
             default:
-                // other cases ('None' included) - ignore
+                // игнор ('None', 'Shot', 'Bounce' и др.) 
                 return;
         }
         CommitAction(action);

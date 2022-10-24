@@ -1,76 +1,106 @@
-using System.Collections.Generic;
-using System.Collections;
+﻿using System.Collections;
 using UnityEngine;
 using Pathfinding;
 
-// simple enemy AI, controlls moving (AstarPath package used), shooting
-
+/// <summary>
+/// Контролирует ИИ врага, передвижение (пакет AstarPath), стрельба
+/// </summary>
 public class EnemyAI : MonoBehaviour
 {
+    private const float RAYWIDTH = 0.1f;
+    private const float RICOCHETCOOLDOWN = 1f;
+    private const float DODGECOOLDOWN = 1.8f;
+    private const float DEG360 = 360f;
+    private const float DEG90 = 90f;
+    private const float DODGESPEED = 4f;
+    private const float DODGEABS = 0.05f;
+    /// <summary>
+    /// Шанс проверки возможности рикошета (от 0 до MAXCHANCE)
+    /// </summary>
+    private const int RICOCHETCHANCE = 2;
+    private const int MAXCHANCE = 100;
+    /// <summary>
+    /// Максимально возможное кол-во отскоков для подсчета рикошета
+    /// </summary>
+    private const int MAXRECURSIONSTEP = 20;
+    private const string ENEMYLAYER = "Enemy";
+    private const string OBSTACLELAYER = "Obstacle";
+    private const string PLAYERLAYER = "Player";
+
     [SerializeField]
-    private LayerMask _bulletCheckerMask;
+    private LayerMask bulletCheckerMask;
+    /// <summary>
+    /// Максимальное количество пускаемых лучей для подсчета возможности рикошета
+    /// </summary>
     [SerializeField]
-    private int _ricochetRayCheckerCount = 90;
+    private int ricochetRayCheckerCount = 90;
     [SerializeField]
-    private LayerMask _recognizableLayers;
+    private LayerMask recognizableLayers;
     [SerializeField]
-    private float _cooldown = 0.7f, _rayWidth = 0.1f;
-    private Shooting _shooting;
-    private float _currentCooldown, _dodgeCooldown = 0f;
-    private AIPath _aiPath;
+    private float cooldown = 0.7f;
+
+    private Shooting shooting;
+    private float shootCooldown = 0f;
+    private float dodgeCooldown = 0f;
+    private AIPath aiPath;
     
     private void Start()
     {
-        _shooting = GetComponent<Shooting>();
+        shooting = GetComponent<Shooting>();
         GameController.instance.GetComponent<AstarPath>().Scan();
-        _currentCooldown = _cooldown;
-        _aiPath = GetComponent<AIPath>();
+        shootCooldown = cooldown;
+        aiPath = GetComponent<AIPath>();
         GetComponent<Seeker>().StartPath(transform.position, 
             GetComponent<AIDestinationSetter>().target.transform.position);
     }
 
+    /// <summary>
+    /// Обработка стрельбы, уворота от пуль
+    /// </summary>
     private void FixedUpdate()
     {
-        if (_dodgeCooldown <= 0f)
+        if (dodgeCooldown <= 0f)
         {
-            // bullet dodge check
             BulletEvadingCheck();
         }
         else
         {
-            _dodgeCooldown -= Time.fixedDeltaTime;
+            dodgeCooldown -= Time.fixedDeltaTime;
         }
         
-        // shooting cooldown
-        if (_currentCooldown > 0f)
+        if (shootCooldown > 0f)
         {
-            _currentCooldown -= Time.fixedDeltaTime;
+            shootCooldown -= Time.fixedDeltaTime;
             return;
         }
         
-        // check if can shoot directly and shoot if can
+        // стреляем прямым выстрелом, если можно
         CheckDirectShot();
 
-        // check random tick - if 2% chance dropped - then make ricochet check
-        if (Resources.instance.Rng.Next(0, 100) > 97)
+        //если выпал шанс - начинаем стрелять рикошетом
+        if (Random.Range(0, MAXCHANCE) < RICOCHETCHANCE)
+        {
             CheckRicochetShot();
+        }
     }
 
+    /// <summary>
+    /// Уклонение от пуль
+    /// </summary>
     private void BulletEvadingCheck()
     {
         RaycastHit2D hit;
         Projectile bullet;
-        for (int i = 0; i < _shooting.Bullets.childCount; i++)
+        // для каждого снаряда проверяем - если пуля касается врага (прямое попадание), то доджим её
+        for (int i = 0; i < shooting.Bullets.childCount; i++)
         {
-            bullet = _shooting.Bullets.GetChild(i).GetComponent<Projectile>();
-            // check if bullet hits the enemy
-            hit = Physics2D.Raycast(bullet.transform.position, bullet.Direction, 1000000f, _bulletCheckerMask);
-            // if bullet hits enemy - time to dodge!
+            bullet = shooting.Bullets.GetChild(i).GetComponent<Projectile>();
+            hit = Physics2D.Raycast(bullet.transform.position, bullet.Direction, float.MaxValue, bulletCheckerMask);
             if (hit.collider != null)
             {
-                if(hit.collider.gameObject.layer == LayerMask.NameToLayer("Enemy"))
+                if(hit.collider.gameObject.layer == LayerMask.NameToLayer(ENEMYLAYER))
                 {
-                    _dodgeCooldown = 1.8f;
+                    dodgeCooldown = DODGECOOLDOWN;
                     StartCoroutine(EvadeBulletCoroutine(Mathf.Abs(bullet.Direction.x) > Mathf.Abs(bullet.Direction.y)));
                     return;
                 }
@@ -78,19 +108,21 @@ public class EnemyAI : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Проверка возможности рикошета для ricochetRayCheckerCount лучей, пущенных по дуге окружности DEG360
+    /// </summary>
     private void CheckRicochetShot()
     {
-        float deltaDegree = 360f / _ricochetRayCheckerCount;
+        float deltaDegree = DEG360 / ricochetRayCheckerCount;
         RaycastHit2D hit;
         Vector3 initialRotation = transform.eulerAngles;
-        for(int i = 0; i < _ricochetRayCheckerCount; i++)
+        for(int i = 0; i < ricochetRayCheckerCount; i++)
         {
-            transform.eulerAngles = new Vector3(0, 0, i * deltaDegree - 90f);
-            hit = Physics2D.Raycast(_shooting.Gun.position, _shooting.Gun.up, 20f, _recognizableLayers);
-            // if ray hits player - shoot
-            if (ReflectRay(hit, _shooting.Gun.up))
+            transform.eulerAngles = new Vector3(0, 0, i * deltaDegree - DEG90);
+            hit = Physics2D.Raycast(shooting.Gun.position, shooting.Gun.up, float.MaxValue, recognizableLayers);
+            if (ReflectRay(hit, shooting.Gun.up))
             {
-                 _currentCooldown = 1f; 
+                shootCooldown = RICOCHETCOOLDOWN; 
                 StartCoroutine(RotateAndShootCoroutine(transform.eulerAngles, initialRotation));
                 transform.eulerAngles = initialRotation;
                 return;
@@ -99,9 +131,13 @@ public class EnemyAI : MonoBehaviour
         transform.eulerAngles = initialRotation;
     }
 
+    /// <summary>
+    /// Корутина для уклонения от пули
+    /// </summary>
+    /// <param name="evadingOnX">Уклонение происходит по оси X?</param>
     private IEnumerator EvadeBulletCoroutine(bool evadingOnX)
     {
-        _aiPath.enabled = false;
+        aiPath.enabled = false;
         float step = 1f;
         Vector2 start = transform.position, 
             endRight = new Vector2(start.x + step, start.y), 
@@ -111,12 +147,12 @@ public class EnemyAI : MonoBehaviour
             endRight = new Vector2(start.x, start.y + step);
             endLeft = new Vector2(start.x, start.y - step);
         }
-        bool canSpawnOnRight = !Physics2D.CircleCast(endRight, 1f, transform.forward, 1f, LayerMask.NameToLayer("Obstacle"));
-        bool canSpawnOnLeft = !Physics2D.CircleCast(endLeft, 1f, transform.forward, 1f, LayerMask.NameToLayer("Obstacle"));
+        bool canSpawnOnRight = !Physics2D.CircleCast(endRight, step, transform.forward, step, LayerMask.NameToLayer(OBSTACLELAYER));
+        bool canSpawnOnLeft = !Physics2D.CircleCast(endLeft, step, transform.forward, step, LayerMask.NameToLayer(OBSTACLELAYER));
 
         if(canSpawnOnLeft && canSpawnOnRight)
         {
-            end = Resources.instance.Rng.Next(0, 2) > 0 ? endRight : endLeft;
+            end = Random.Range(0, 2) > 0 ? endRight : endLeft;
         }
         else if (canSpawnOnLeft)
         {
@@ -131,100 +167,109 @@ public class EnemyAI : MonoBehaviour
             yield break;
         }
 
-        while (Mathf.Abs(transform.position.x - end.x) + Mathf.Abs(transform.position.y - end.y) > 0.05f)
+        while (Mathf.Abs(transform.position.x - end.x) + Mathf.Abs(transform.position.y - end.y) > DODGEABS)
         {
-            transform.position = Vector2.MoveTowards(transform.position, end, Time.deltaTime * 4f);
+            transform.position = Vector2.MoveTowards(transform.position, end, Time.deltaTime * DODGESPEED);
             yield return null;
         }
 
         yield return null;
-        _aiPath.enabled = true;
+        aiPath.enabled = true;
     }
 
+    /// <summary>
+    /// Корутина для поворота и последующего выстрела
+    /// </summary>
+    /// <param name="shootDirection">Направление, куда надо развернуться</param>
+    /// <param name="initialRotation">Изначальный поворот</param>
     private IEnumerator RotateAndShootCoroutine(Vector3 shootDirection, Vector3 initialRotation)
     {
-        _aiPath.enabled = false;
+        aiPath.enabled = false;
         float time = 0;
         Quaternion start = new Quaternion(), end = new Quaternion();
         start.eulerAngles = initialRotation;
         end.eulerAngles = shootDirection;
         yield return null;
 
-        while (Mathf.Abs(transform.eulerAngles.z - shootDirection.z) > 0.1f)
+        while (Mathf.Abs(transform.eulerAngles.z - shootDirection.z) > DODGEABS * 2)
         {
-            transform.rotation = Quaternion.Lerp(start, end, time * 4f);
+            transform.rotation = Quaternion.Lerp(start, end, time * DODGESPEED);
             time += Time.deltaTime;
             yield return null;
         }
 
         Shoot();
         yield return null;
-        _aiPath.enabled = true;
+        aiPath.enabled = true;
     }
 
+    /// <summary>
+    /// Подсчет результата выстрела после n-ного рикошета
+    /// </summary>
+    /// <param name="hit">Объект, которого пуля коснулась последним</param>
+    /// <param name="direction">Направление полёта пули</param>
+    /// <param name="recursionStep">Текущий шаг рекурсии</param>
+    /// <returns>true, если пуля попадёт по игроку (иначе false)</returns>
     private bool ReflectRay(RaycastHit2D hit, Vector2 direction, int recursionStep = 0)
     {
-        if(hit.collider == null || recursionStep > 20)
+        if(hit.collider == null || recursionStep > MAXRECURSIONSTEP)
         {
             return false;
         }
-
-        // hit the obstacle - reflect ray
-        if (hit.collider.gameObject.layer == LayerMask.NameToLayer("Obstacle"))
+        // выстрел по препятствию - отражение луча
+        if (hit.collider.gameObject.layer == LayerMask.NameToLayer(OBSTACLELAYER))
         {
             direction = Vector2.Reflect(direction, hit.normal);
-            hit = Physics2D.Raycast(hit.point, direction, 20f, _recognizableLayers);
+            hit = Physics2D.Raycast(hit.point, direction, 20f, recognizableLayers);
             return ReflectRay(hit, direction, recursionStep + 1);
         }
-        // hit the player - ray is good
-        else if (hit.collider.gameObject.layer == LayerMask.NameToLayer("Player"))
+        // выстрел по игроку - рикошетом возможно попасть
+        else if (hit.collider.gameObject.layer == LayerMask.NameToLayer(PLAYERLAYER))
         {
             return true;
         }
-        // hit self - no point to shoot in that direction
-        else if (hit.collider.gameObject.layer == LayerMask.NameToLayer("Enemy"))
-        {
-            return false;
-        }
-        // hit bullet border - ray is useless
-        else if (hit.collider.gameObject.layer == LayerMask.NameToLayer("BulletDestroyer"))
-        {
-            return false;
-        }
+        // выстрел по самому себе, по границе уничтожения пули и т.д. - такая последовательность рикошетов не валидна
         return false;
     }
 
+    /// <summary>
+    /// Проверка возможности попасть в игрока прямым попаданием пули (всего пускается 3 луча в направлении взгляда)
+    /// </summary>
     private void CheckDirectShot()
     {
-        // pointing a ray into a player
-        ShootIfOnTarget(Physics2D.Raycast(_shooting.Gun.position, _shooting.Gun.up, 20f, _recognizableLayers));
-
-        // and 2 more rays to higher chanse of getting a hit
-        if (_currentCooldown > 0f)
+        ShootIfOnTarget(Physics2D.Raycast(shooting.Gun.position, shooting.Gun.up, float.MaxValue, recognizableLayers));
+        if (shootCooldown > 0f)
+        {
             return;
-        ShootIfOnTarget(Physics2D.Raycast(
-            new Vector2(_shooting.Gun.position.x + _rayWidth, _shooting.Gun.position.y),
-            _shooting.Gun.up, 20f, _recognizableLayers));
-        if (_currentCooldown > 0f)
+        }
+        ShootIfOnTarget(Physics2D.Raycast(new Vector2(shooting.Gun.position.x + RAYWIDTH, shooting.Gun.position.y),
+            shooting.Gun.up, float.MaxValue, recognizableLayers));
+        if (shootCooldown > 0f)
+        {
             return;
-        ShootIfOnTarget(Physics2D.Raycast(
-            new Vector2(_shooting.Gun.position.x - _rayWidth, _shooting.Gun.position.y),
-            _shooting.Gun.up, 20f, _recognizableLayers));
+        }
+        ShootIfOnTarget(Physics2D.Raycast(new Vector2(shooting.Gun.position.x - RAYWIDTH, shooting.Gun.position.y),
+            shooting.Gun.up, float.MaxValue, recognizableLayers));
     }
 
+    /// <summary>
+    /// Выстрелить из оружия
+    /// </summary>
     private void Shoot()
     {
-        _shooting.Shoot();
-        _currentCooldown = _cooldown;
+        shooting.Shoot();
+        shootCooldown = cooldown;
     }
 
-    // if ray collides player - shoot
+    /// <summary>
+    /// Вызывает Shoot(), если пуля потенциально может попасть в игрока
+    /// </summary>
+    /// <param name="hit">Объект, которого коснется пуля</param>
     private void ShootIfOnTarget(RaycastHit2D hit)
     {
         if (hit.collider != null)
         {
-            //hits the player - time to shoot
-            if (hit.collider.gameObject.layer == LayerMask.NameToLayer("Player"))
+            if (hit.collider.gameObject.layer == LayerMask.NameToLayer(PLAYERLAYER))
             {
                 Shoot();
             }
